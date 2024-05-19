@@ -8,3 +8,10 @@
 * Task : Creating components with JSX Rendering components to the DOM Embedding expressions in JSX
   
 ![Components in JSX](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/1fe7b1ee-267e-481e-82c9-37e007cca9b4)
+
+## Day-3 [May-19, 2024]
+* Task : Creating and using functional components Passing props to components Default props and prop types validation
+
+![Component with props](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/e64da4ed-922b-418c-8b9b-cb0d365f1c10)
+![Component with default props](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/2a134f4c-0138-4c5e-9f5f-46477581bf1a)
+
