@@ -15,3 +15,6 @@
 ![Component with props](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/e64da4ed-922b-418c-8b9b-cb0d365f1c10)
 ![Component with default props](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/2a134f4c-0138-4c5e-9f5f-46477581bf1a)
 
+## Day-4 [May-20, 2024]
+* Task : Managing state in class components Using lifecycle methods in class components
+![Managing state in class components using life cycle methods](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/cedb729a-d328-4b0f-8563-ab82409cf7a2)
