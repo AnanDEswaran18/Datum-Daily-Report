@@ -25,7 +25,7 @@
 
 ![image](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/7799d9c9-5841-4ab4-b6cd-00e7ff49ce55)
 
-import React, { useState, useRef } from "react";
+```import React, { useState, useRef } from "react";
 function Form() {
     const [formData, setFormData] = useState({name: "",email: "",items: [],});
     const newRef = useRef(null);
@@ -82,4 +82,4 @@ function Form() {
 }
 
 export default Form;
-
+```
