@@ -217,3 +217,15 @@ const App = ()=>{
 
 export default App;
 ```
+
+# Creating data
+![image](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/c4e77f8f-b743-4a6d-b702-064ca9b7c188)
+
+# Displaying all data
+![image](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/dc37997f-7d73-4e12-afe1-eb2fea9871db)
+
+# Updating a data
+![image](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/4bbf51cc-e27a-4789-bbfb-ed73add630e2)
+
+# Deleting a data
+![image](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/03fc03c5-1871-4596-8295-9573b428c11f)
