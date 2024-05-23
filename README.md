@@ -229,3 +229,62 @@ export default App;
 
 # Deleting a data
 ![image](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/03fc03c5-1871-4596-8295-9573b428c11f)
+
+
+
+# Converting Class Components to Functional Components with Hooks(useState and useEffect)
+
+* Class Component
+```
+class Counter extends React.Component {
+  constructor(props){
+    super(props)
+    this.state ={data:[]}
+  }
+
+  componentDidMount(){
+      const uData = await axios.get("http://localhost:3000/data")
+      this.setState({data:uData})
+  }
+  render(){
+    return(
+      <div>
+        <>
+          {data}
+        </>
+
+      </div>
+    )
+  }
+}
+```
+
+* Functional Component
+```
+import React, { useState, useEffect } from 'react'
+
+function Counter(){
+  const [uData, setUsers]=useState();
+  useEffect(() =>{
+    const getData = async()=>{
+      try{
+        const res = await axios.get("http://localhost:3000/data");
+        setUsers(res.data);
+      }
+      catch(err){
+        console.error(err);
+      }
+    };
+    getData();
+  }, []);
+
+  return (
+    <div>
+      <>
+        {uData}
+      </>
+    </div>
+  );
+}
+
+```  
