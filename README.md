@@ -180,55 +180,219 @@ app.listen(port,()=>{
 
 ```
 ## React Code
+- Create User
 ```
 import React, { useState } from 'react';
 import axios from 'axios';
 
-const App = ()=>{
-    const [formData, setFormData] =useState({name:'',age:''});
+export const Create=()=>{
+    const [formData, setFormData] = useState({ name: "", age: "" });
+    const [result, setResult] = useState(null)
 
-    const handleChange = (e)=>{
-        setFormData({...formData,[e.target.name]: e.target.value });
+    const handleChange = (event) => {
+        const { name, value } = event.target;
+        setFormData({ ...formData, [name]: value });
     };
 
-    const handleSubmit=async(event)=>{
+    const handleSubmit = async (event) => {
         event.preventDefault();
-        try{
-            await axios.post('http://localhost:3001/data', formData);
-            console.log('Data saved');
+        try {
+            const response = await axios.post('http://localhost:3001/data/create', formData);
+            if(response.status===200){
+                setResult(true)
+            }
+            console.log(response.data);
             setFormData({name:'',age:''});
-        } catch (error){
-            console.error('Data not saved', error);
+        } catch (error) {
+            console.error(error);
         }
-        // console.log(formData);
-        // setFormData({ name: "", age: "" });
     };
 
-    return(
-        <div>
+    return (
+        <>
+            <h2>Create User</h2>
             <form onSubmit={handleSubmit}>
                 <input type="text" placeholder="Name" name="name" value={formData.name} onChange={handleChange}/>
-                <br/><input type="number" placeholder="Age" name="age" value={formData.age} onChange={handleChange}/>
-                <br/><button type="submit">Save</button>
+                <br />
+                <input type="number" placeholder="Age" name="age" value={formData.age} onChange={handleChange}/>
+                <br />
+                <button type="submit">Save</button>
             </form>
+            {result ? <p>User Created</p> : <></>}
+        </>
+    );
+}
+
+
+```
+-Update User
+```
+import React, { useState, useEffect } from "react";
+import axios from "axios"; // Import Axios
+
+export const Update=()=>{
+    const [id,setid] = useState("");
+    const [details,setDetails] = useState({name: "",age: ""});
+    const [isEditing,setIsEditing] = useState(false);
+    const [editedDetails,setEditedDetails] = useState({ name: "",age: "" });
+    useEffect(() => {
+        const fetchDetails = async () => {
+            try {
+                const response = await axios.get(`http://localhost:3001/data/${id}`);
+                setDetails(response.data);
+            } catch (error) {
+                console.error("Error fetching details:", error);
+            }
+        };
+        if(id) {
+            fetchDetails();
+        }
+    }, [id]);
+
+    const handleChange = (event) => {
+        setEditedDetails({
+            ...editedDetails,
+            [event.target.name]: event.target.value
+        });
+    };
+
+    const handleUpdate = async()=>{
+        try {
+            const response = await axios.put(`http://localhost:3001/data/${id}`,editedDetails);
+            if (response.status === 200){
+                console.log("Details updated successfully!");
+                setIsEditing(false); 
+                setDetails(editedDetails); 
+                setEditedDetails({ name: "", age: "" }); 
+            }else{
+                console.error("Error updating details:", await response.text());
+            }
+        }catch(error){
+            console.error("Error updating details:", error);
+        }
+    };
+
+    return (
+        <div>
+            <h2>Update User Details</h2>
+            <form onSubmit={(e)=>e.preventDefault()}>
+                <input type="text" placeholder="Enter object ID" value={id} onChange={(e) => setid(e.target.value)}/>
+            </form>
+            {details.name&&(
+                <div>
+                    <p>Name: {details.name}</p>
+                    <p>Age: {details.age}</p>
+                    {isEditing ?
+                        <>
+                            <input type="text" name="name" value={editedDetails.name } onChange={handleChange} placeholder="Edit Name"/><br/>
+                            <input type="number" name="age" value={editedDetails.age } onChange={handleChange} placeholder="Edit Age"/><br/>
+                            <button onClick={handleUpdate}>Update</button>
+                        </> :
+                        <button onClick={() => setIsEditing(true)}>Edit</button>
+                    }
+                </div>
+            )}
         </div>
     );
 };
 
-export default App;
 ```
+ -Delete User
+```
+import React, { useState } from "react";
+import axios from "axios";
 
+export const Delete = () => {
+    const [idToDelete, setIdToDelete] = useState(null);
+    const [message, setMessage] = useState(null);
+    const handleChange = (event) => {
+        setIdToDelete(event.target.value);
+    };
+
+    const handleDelete = async () => {
+        try {
+        const response = await axios.delete(`http://localhost:3001/data/${idToDelete}`);
+
+        if (response.status === 200) {
+            //console.log("Data deleted successfully!");
+            setMessage("Deletion Success!!")
+        } else {
+            throw new Error(`Error deleting data: ${response.statusText}`);
+        }
+        } catch (error) {
+            console.error("Error deleting data:", error);
+        }
+    };
+
+    return (
+        <div>
+        <h2>Delete User Details</h2>
+        <input
+            type="text"
+            placeholder="Enter ID to Delete"
+            onChange={handleChange}
+        />
+        <button onClick={handleDelete}>Delete</button>
+        {message && <p className="error-message">{message}</p>}
+        </div>
+    );
+};
+
+```
+- Display all user details
+```
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+
+export const AllData = () => {
+    const [data, setData] = useState({});
+
+    useEffect(() => {
+        const fetchData = async () => {
+          try {
+              const response = await axios.get("http://localhost:3001/data-all"); 
+              setData(response.data.data);
+              console.log(response);
+          } catch (error) {
+              console.error(error); 
+          }
+        };
+        fetchData();
+    }, []); 
+
+    return (
+        <div>
+          <h2>All User Data</h2>
+          {data.length>0?
+              <ul>
+              {data.map((val) => (
+                  <li key={val._id}>
+                      Name: {val.name}<br/> Age: {val.age}<br/> Id: {val._id}
+                  </li>
+              ))}
+              </ul>
+            :<p>No data found.</p>}
+        </div>
+    );
+};
+
+```  
+ 
 # Creating data
-![image](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/c4e77f8f-b743-4a6d-b702-064ca9b7c188)
+![image](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/16b507dd-ead8-479b-8e60-ec93d905fcdf)
+
 
 # Displaying all data
-![image](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/dc37997f-7d73-4e12-afe1-eb2fea9871db)
+![image](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/c134cc36-3f90-49b6-866f-60e4f84a3afe)
+
 
 # Updating a data
-![image](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/4bbf51cc-e27a-4789-bbfb-ed73add630e2)
+![image](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/f3e079c2-8e6e-43af-be98-f19df4cfdf61)
+
 
 # Deleting a data
-![image](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/03fc03c5-1871-4596-8295-9573b428c11f)
+![image](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/ccd7c67b-9152-46c6-a585-55281ec283ad)
+
 
 
 
