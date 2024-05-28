@@ -452,3 +452,84 @@ function Counter(){
 }
 
 ```  
+
+## ToDo List
+
+* ToDoList.js
+```
+
+import React, { useState } from "react";
+import TodoItem from "./TodoItems";
+
+const TodoList =()=>{
+    const [todo,setTodo] =useState([]);
+    const [value,setValue]=useState("");
+
+    const add=()=>{
+        if(value){
+            const title = value;
+            const newTodo = { title, completed: false};
+            setTodo([...todo, newTodo]);
+            setValue("");
+        }
+    };
+
+    const toggleTodoComplete=(index)=>{
+        const newTodo = [...todo];
+        newTodo[index].completed = !newTodo[index].completed;
+        setTodo(newTodo);
+    };
+
+    const removeTodo=(index)=>{
+        const newTodo = [...todo];
+        newTodo.splice(index, 1);
+        setTodo(newTodo);
+    };
+
+    const handleChange=(e)=>{
+        setValue(e.target.value);
+    };
+
+    const handleEnter=(e)=>{
+        if (e.key==="Enter"){
+            add();
+        }
+    };
+
+    return(
+        <div className="todo-list">
+            <h2>Todo</h2>
+            <input type="text" placeholder="Add a Todo" value={value} onChange={handleChange} onKeyDown={handleEnter}/>
+            <ul style={{listStyle: "none"}}>
+                {todo.map((todo,index)=>(
+                    <TodoItem key={index} title={todo.title} completed={todo.completed} onCheck={() => toggleTodoComplete(index)} onRemove={() => removeTodo(index)}/>
+                ))}
+            </ul>
+        </div>
+    );
+};
+
+export default TodoList;
+
+```
+
+* ListItem.js
+```
+import React from "react";
+
+const TodoItem=({title, completed, onCheck, remove })=>{
+    return (
+        <li className={`todo-item ${completed ? "completed" : ""}`}>
+            <label>
+                <input type="checkbox" checked={completed} onChange={onCheck}/>
+                {title}
+            </label>
+            <button onClick={remove}>Remove</button>
+        </li>
+    );
+};
+
+export default TodoItem;
+```
+
+![image](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/d6b42ea4-d406-4473-8b23-550c42bacff7)
