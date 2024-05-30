@@ -85,316 +85,6 @@ function Form() {
 export default Form;
 ```
 
-## CRUD Operation with Node, Express, MongoDB and React
-```
-const express = require("express")
-const app = express()
-
-// const bodyParser = require("body-parser")
-// app.use(bodyParser.json())
-app.use(express.json());
-
-const cors = require("cors");
-app.use(cors());
-
-require("dotenv").config()
-
-const port = process.env.PORT
-const con = process.env.CONNECTION_STRING
-
-const mongoose = require("mongoose")
-const dataSchema =new mongoose.Schema({name:String,age:Number});
-const data =mongoose.model("FormData", dataSchema);
-
-// -----------------------------------------------------------//
-
-mongoose
-    .connect(con)
-    .then(()=>console.log("Connected"))
-    .catch((err)=>console.error("Connection Failed",err));
-
-    
-//create data
-app.post("/data",async(req,res)=>{
-    try{
-        const {name,age}=req.body;
-        await data.create({name,age});
-        res.status(200).json({message:"Data saved"});
-    }
-    catch(err){
-        console.error("Failed");
-        res.status(500).json({error:`${err}`});
-    }
-});
-
-//get all data
-app.get("/data",async(req,res)=>{
-    try{
-        const val = await data.find({});
-        res.status(200).json({count:val.length,data:val})
-    }
-    catch(error){
-        res.status(500).json({ error: `${error}` });
-    }
-});
-
-//get single data by id
-app.get("/data/:id",async(req,res)=>{
-    try{
-        const {id} = req.params
-        const singleData = await data.findById(id)
-        res.status(200).json(singleData)
-    }catch(error){
-        res.status(500).json({ error: `${error}` });
-    }
-})
-
-//update data
-app.put("/data/:id",async(req,res)=>{
-    try{
-        const {name,age} = req.body
-        const {id} = req.params
-        const result = await data.findByIdAndUpdate(id,{name,age})
-        res.status(200).json({message:"Data Updated"})
-        if(!result){res.json({message:"Book not found"})}
-    }catch(error){
-        res.status(500).json({ error: `${error}` });
-    }
-})
-
-//delete data
-app.delete("/data/:id",async(req,res)=>{
-    try{
-        const {id} = req.params
-        await data.findByIdAndDelete(id);
-        res.status(200).json({message:"Data deleted"})
-    }
-    catch(error){
-        res.status(500).json({ error: `${error}` });
-    }
-})
-
-app.listen(port,()=>{
-    console.log("Server started!!!");
-})
-
-```
-## React Code
-- Create User
-```
-import React, { useState } from 'react';
-import axios from 'axios';
-
-export const Create=()=>{
-    const [formData, setFormData] = useState({ name: "", age: "" });
-    const [result, setResult] = useState(null)
-
-    const handleChange = (event) => {
-        const { name, value } = event.target;
-        setFormData({ ...formData, [name]: value });
-    };
-
-    const handleSubmit = async (event) => {
-        event.preventDefault();
-        try {
-            const response = await axios.post('http://localhost:3001/data/create', formData);
-            if(response.status===200){
-                setResult(true)
-            }
-            console.log(response.data);
-            setFormData({name:'',age:''});
-        } catch (error) {
-            console.error(error);
-        }
-    };
-
-    return (
-        <>
-            <h2>Create User</h2>
-            <form onSubmit={handleSubmit}>
-                <input type="text" placeholder="Name" name="name" value={formData.name} onChange={handleChange}/>
-                <br />
-                <input type="number" placeholder="Age" name="age" value={formData.age} onChange={handleChange}/>
-                <br />
-                <button type="submit">Save</button>
-            </form>
-            {result ? <p>User Created</p> : <></>}
-        </>
-    );
-}
-
-
-```
--Update User
-```
-import React, { useState, useEffect } from "react";
-import axios from "axios"; // Import Axios
-
-export const Update=()=>{
-    const [id,setid] = useState("");
-    const [details,setDetails] = useState({name: "",age: ""});
-    const [isEditing,setIsEditing] = useState(false);
-    const [editedDetails,setEditedDetails] = useState({ name: "",age: "" });
-    useEffect(() => {
-        const fetchDetails = async () => {
-            try {
-                const response = await axios.get(`http://localhost:3001/data/${id}`);
-                setDetails(response.data);
-            } catch (error) {
-                console.error("Error fetching details:", error);
-            }
-        };
-        if(id) {
-            fetchDetails();
-        }
-    }, [id]);
-
-    const handleChange = (event) => {
-        setEditedDetails({
-            ...editedDetails,
-            [event.target.name]: event.target.value
-        });
-    };
-
-    const handleUpdate = async()=>{
-        try {
-            const response = await axios.put(`http://localhost:3001/data/${id}`,editedDetails);
-            if (response.status === 200){
-                console.log("Details updated successfully!");
-                setIsEditing(false); 
-                setDetails(editedDetails); 
-                setEditedDetails({ name: "", age: "" }); 
-            }else{
-                console.error("Error updating details:", await response.text());
-            }
-        }catch(error){
-            console.error("Error updating details:", error);
-        }
-    };
-
-    return (
-        <div>
-            <h2>Update User Details</h2>
-            <form onSubmit={(e)=>e.preventDefault()}>
-                <input type="text" placeholder="Enter object ID" value={id} onChange={(e) => setid(e.target.value)}/>
-            </form>
-            {details.name&&(
-                <div>
-                    <p>Name: {details.name}</p>
-                    <p>Age: {details.age}</p>
-                    {isEditing ?
-                        <>
-                            <input type="text" name="name" value={editedDetails.name } onChange={handleChange} placeholder="Edit Name"/><br/>
-                            <input type="number" name="age" value={editedDetails.age } onChange={handleChange} placeholder="Edit Age"/><br/>
-                            <button onClick={handleUpdate}>Update</button>
-                        </> :
-                        <button onClick={() => setIsEditing(true)}>Edit</button>
-                    }
-                </div>
-            )}
-        </div>
-    );
-};
-
-```
- -Delete User
-```
-import React, { useState } from "react";
-import axios from "axios";
-
-export const Delete = () => {
-    const [idToDelete, setIdToDelete] = useState(null);
-    const [message, setMessage] = useState(null);
-    const handleChange = (event) => {
-        setIdToDelete(event.target.value);
-    };
-
-    const handleDelete = async () => {
-        try {
-        const response = await axios.delete(`http://localhost:3001/data/${idToDelete}`);
-
-        if (response.status === 200) {
-            //console.log("Data deleted successfully!");
-            setMessage("Deletion Success!!")
-        } else {
-            throw new Error(`Error deleting data: ${response.statusText}`);
-        }
-        } catch (error) {
-            console.error("Error deleting data:", error);
-        }
-    };
-
-    return (
-        <div>
-        <h2>Delete User Details</h2>
-        <input
-            type="text"
-            placeholder="Enter ID to Delete"
-            onChange={handleChange}
-        />
-        <button onClick={handleDelete}>Delete</button>
-        {message && <p className="error-message">{message}</p>}
-        </div>
-    );
-};
-
-```
-- Display all user details
-```
-import React, { useEffect, useState } from "react";
-import axios from "axios";
-
-export const AllData = () => {
-    const [data, setData] = useState({});
-
-    useEffect(() => {
-        const fetchData = async () => {
-          try {
-              const response = await axios.get("http://localhost:3001/data-all"); 
-              setData(response.data.data);
-              console.log(response);
-          } catch (error) {
-              console.error(error); 
-          }
-        };
-        fetchData();
-    }, []); 
-
-    return (
-        <div>
-          <h2>All User Data</h2>
-          {data.length>0?
-              <ul>
-              {data.map((val) => (
-                  <li key={val._id}>
-                      Name: {val.name}<br/> Age: {val.age}<br/> Id: {val._id}
-                  </li>
-              ))}
-              </ul>
-            :<p>No data found.</p>}
-        </div>
-    );
-};
-
-```  
- 
-# Creating data
-![image](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/16b507dd-ead8-479b-8e60-ec93d905fcdf)
-
-
-# Displaying all data
-![image](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/c134cc36-3f90-49b6-866f-60e4f84a3afe)
-
-
-# Updating a data
-![image](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/f3e079c2-8e6e-43af-be98-f19df4cfdf61)
-
-
-# Deleting a data
-![image](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/ccd7c67b-9152-46c6-a585-55281ec283ad)
-
-
-
 
 # Converting Class Components to Functional Components with Hooks(useState and useEffect)
 
@@ -533,3 +223,484 @@ export default TodoItem;
 ```
 
 ![image](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/d6b42ea4-d406-4473-8b23-550c42bacff7)
+
+
+## CRUD Operation
+# React Components
+
+* Create.js
+
+```
+import React, { useState } from 'react';
+import axios from 'axios';
+
+const departments = [
+    {id:'0001',name:'Human Resource'},
+    {id:'0002',name:'Accounting and Finance'},
+    {id:'0003',name:'Marketing'},
+    {id:'0004',name:'Sales'},
+    {id:'0005',name:'IT'},
+    {id:'0006',name:'Production'},
+    {id:'0007',name:'Research and Development'},
+];
+
+export const Create=()=>{
+    const [formData,setFormData] = useState({name:"",employee_id:"",department_id:"",position:"",salary:""});
+    const [result, setResult] = useState("");
+
+    const handleChange=(event)=>{
+        const {name,value}=event.target;
+        setFormData({...formData,[name]:value});
+    };
+    const handleSubmit =async(event)=>{
+        event.preventDefault();
+        try{
+            const response = await axios.post('http://localhost:3001/employees',formData);
+            if (response.status===200) {
+                setResult(true);
+            }
+            console.log(response.data);
+            setFormData({ name: '',employee_id:'',department_id:'', position:'', salary:''});
+        }catch (error){
+            console.error(error);
+        }
+    };
+
+    return (
+        <>
+            <h2>Create User</h2>
+            <form onSubmit={handleSubmit}>
+                <label for="name">name:</label>
+                <input type="text" placeholder="name" name="name" value={formData.name} onChange={handleChange} required />
+                <br />
+                <label for="employee_id">Employee ID:</label>
+                <input type="text" placeholder="Employee ID" name="employee_id" value={formData.employee_id} onChange={handleChange} required />
+                <br />
+                <label htmlFor="department_id">Department ID:</label>
+                <select id="department_id" name="department_id" value={formData.department_id} onChange={handleChange} required>
+                    <option value="">Select Department</option>
+                    {departments.map((dept) =>(
+                        <option key={dept.id} value={dept.id}>
+                            {dept.name}
+                        </option>
+                    ))}
+                </select>
+                <br/>
+                <label for="position">Position:</label>
+                <input type="text" placeholder="Position" name="position" value={formData.position} onChange={handleChange} required />
+                <br/>
+                <label for="salary">Salary:</label>
+                <input type="number" placeholder="Salary" name="salary" value={formData.salary} onChange={handleChange} required />
+                <br/>
+                <button type="submit">Submit</button>
+            </form>
+            {result?<p>User Created</p>:<></>}
+        </>
+    );
+};
+```
+
+* Update.js
+
+```
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+
+export const Update = () => {
+    const [id, setId] = useState("");
+    const [details, setDetails] = useState({name:"",position:"",salary:""});
+    const [isEditing, setIsEditing] = useState(false);
+    const [editedDetails, setEditedDetails] = useState({name:"",position:"",salary:"" });
+
+    useEffect(() => {
+        const fetchDetails = async () => {
+            try {
+                const response = await axios.get(`http://localhost:3001/employees/${id}`);
+                setDetails(response.data);
+            }
+            catch(error){
+                console.error("Error fetching details:", error);
+            }
+        };
+        if (id) {
+            fetchDetails();
+        }
+    }, [id]);
+
+    const handleChange=(event)=>{
+        setEditedDetails({...editedDetails,[event.target.name]: event.target.value});
+    };
+
+    const handleUpdate = async () => {
+        try {
+            const response = await axios.put(`http://localhost:3001/employees/${id}`, editedDetails);
+
+            if (response.status === 200) {
+                console.log("Details updated successfully!");
+                setIsEditing(false);
+                setDetails(editedDetails);
+                setEditedDetails({ name: "", position: "", salary: "" }); 
+            } else {
+                console.error("Error updating details:", await response.text());
+            }
+        } catch (error) {
+        console.error("Error updating details:", error);
+        }
+    }; 
+    return (
+        <div>
+        <h2>Update Employee Details</h2>
+        <form onSubmit={(e) => e.preventDefault()}>
+            <input type="text" placeholder="Enter employee ID" value={id} onChange={(e) => setId(e.target.value)} />
+        </form>
+        {details.name && (
+            <div>
+            <p>Name: {details.name}</p>
+            <p>Position: {details.position}</p>
+            <p>Salary: {details.salary}</p>
+            {isEditing ? (
+                <>
+                <input type="text" name="name" value={editedDetails.name} onChange={handleChange} placeholder="Edit Name" />
+                <br />
+                <input type="text" name="position" value={editedDetails.position} onChange={handleChange} placeholder="Edit Position" />
+                <br />
+                <input type="number" name="salary" value={editedDetails.salary} onChange={handleChange} placeholder="Edit Salary" />
+                <br />
+                <button onClick={handleUpdate}>Update</button>
+                </>
+            ) : (
+                <button onClick={() => setIsEditing(true)}>Edit</button>
+            )}
+            </div>
+        )} 
+        </div>
+    );
+};
+
+```
+
+* Delete.js
+
+```
+import React, { useState } from "react";
+import axios from "axios";
+
+export const Delete=()=>{
+    const [idToDelete, setIdToDelete] = useState(null); 
+    const [message, setMessage] = useState(null);
+
+    const handleChange=(event)=>{
+        setIdToDelete(event.target.value); 
+    };
+    const handleDelete=async()=>{
+        try {
+        const response=await axios.delete(`http://localhost:3001/employees/${idToDelete}`);
+
+        if (response.status===200) {
+            console.log("Employee deleted successfully!");
+            setMessage("Deletion Successful!");
+            setIdToDelete(null);
+        } else {
+            throw new Error("Error deleting user"); 
+        }
+        } 
+        catch(error) {
+            console.error("Error deleting employee:", error);
+            setMessage(`Error: ${error.message}`); 
+        }
+    };
+
+    return (
+        <div>
+            <h2>Delete Employee Details</h2>
+            <input type="text"placeholder="Enter Employee ID to Delete"onChange={handleChange}/>
+            <button onClick={handleDelete}>Delete</button>
+            {message && <p className="error-message">{message}</p>}
+        </div>
+    );
+};
+
+```
+
+* GetAllEmployeeDetails.js
+
+```
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+
+export const AllData=()=>{
+    const [data, setData]=useState([]); // Update state type to array
+
+    useEffect(()=>{
+        const fetchData =async()=> {
+            try {
+                const response = await axios.get("http://localhost:3001/employees");
+                setData(response.data);
+                console.log(response.data);
+            }
+            catch(error){
+                console.error(error);
+            }
+        };
+        fetchData();
+    }, []);
+
+    return (
+        <div>
+        <h2>All User Data</h2>
+        <table style={{ border: "1px solid black", borderCollapse: "collapse" }}>
+            <thead>
+            <tr>
+                <th style={{ border: "1px solid black", padding: "5px" }}>
+                    Name
+                    </th>
+                <th style={{ border: "1px solid black", padding: "5px" }}>
+                    Department
+                </th>
+                <th style={{ border: "1px solid black", padding: "5px" }}>
+                    Manager
+                </th>
+                <th style={{ border: "1px solid black", padding: "5px" }}>
+                    Position
+                </th>
+                <th style={{ border: "1px solid black", padding: "5px" }}>
+                    Salary
+                </th>
+                <th style={{ border: "1px solid black", padding: "5px" }}>
+                    ID
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+                {data.length > 0 &&
+                    data.map((employee) => (
+                    <tr key={employee._id} style={{ border: "1px solid black" }}>
+                        <td style={{ border: "1px solid black", padding: "5px" }}>
+                        {employee.name}
+                        </td>
+                        <td style={{ border: "1px solid black", padding: "5px" }}>
+                        {employee.department
+                            ? employee.department.department_name
+                            : "Not Found"}
+                        </td>
+                        <td style={{ border: "1px solid black", padding: "5px" }}>
+                            {employee.department
+                                ? employee.department.manager
+                                : "Not Found"}
+                        </td>
+                        <td style={{ border: "1px solid black", padding: "5px" }}>
+                            {employee.position}
+                        </td>
+                        <td style={{ border: "1px solid black", padding: "5px" }}>
+                            {employee.salary}
+                        </td>
+                        <td style={{ border: "1px solid black", padding: "5px" }}>
+                            {employee.employee_id}
+                        </td>
+                    </tr>
+                    ))}
+                {data.length === 0 && (
+                    <tr>
+                        <td colSpan="6">No data found.</td>
+                    </tr>
+                )}
+            </tbody>
+        </table>
+        </div>
+    );
+};
+```
+
+* GetAEmployeeDetails.js
+
+```
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+
+export const SingleUser = ()=>{
+    const [id, setId]= useState("");
+    const [user, setUser]= useState(null); 
+    const [error, setError] = useState(null); 
+
+    const handleChange = (event)=>{
+        setId(event.target.value);
+    };
+
+    const fetchUser =async() =>{
+        try {
+            const response = await axios.get(`http://localhost:3001/employees/${id}`);
+            setUser(response.data);
+            setError(null); 
+        } catch (error) {
+            setError("Error fetching user data");
+            console.error("Error:", error);
+        }
+    };
+
+    useEffect(() => {
+        if (id) {
+            fetchUser();
+        }
+    }, [id]);
+
+    return (
+        <div>
+        <h2>Employee Details</h2>
+            <input type="text" placeholder="Enter employee ID" value={id} onChange={handleChange}/>
+            {error ? (
+                <p className="error-message">{error}</p>
+            ):user?(
+                    <div>
+                    <p>Name: {user.name}</p>
+                    <p>
+                        Department:{" "}
+                        {user.department ? user.department.department_name : "Not Found"}
+                    </p>
+                    <p>
+                        Manager: {user.department ? user.department.manager : "Not Found"}
+                    </p>
+                    <p>Position: {user.position}</p>
+                    <p>Salary: {user.salary}</p>
+                    <p>ID: {user.employee_id}</p>
+                    </div>
+            ):null}
+        </div>
+    );
+};
+```
+
+# Backend
+
+* index.js
+```
+const express = require("express");
+const app = express();
+const cors = require("cors");
+app.use(express.json());
+app.use(cors());
+require("dotenv").config();
+const port = process.env.PORT;
+const con = process.env.CONNECTION_STRING;
+const mongoose = require("mongoose");
+
+const employeeSchema = new mongoose.Schema({
+    name: String,
+    employee_id: { type: String, unique: true },
+    department_id: String,
+    position: String,
+    salary: Number,
+});
+
+const Employee = mongoose.model("Employee", employeeSchema);
+
+const DepartmentSchema = new mongoose.Schema({
+    department_name: String,
+    department_id: String,
+    manager: String,
+},{
+    collection:"department"
+});
+
+const Department = mongoose.model("Department", DepartmentSchema)
+
+
+mongoose
+    .connect(con)
+    .then(() => console.log("Connected"))
+    .catch((err) => console.error("Connection Failed", err));
+
+
+
+app.get("/employees", async (req, res) => {
+    try {
+        const employees = await Employee.find();
+        const employeesWithDepartments = await Promise.all(
+            employees.map(async (employee) => {
+                const department = await Department.findOne({ department_id: employee.department_id });
+                console.log(`Employee ${employee.name} (ID: ${employee.employee_id}) - Department: ${department ? department.department_name : 'Not found'}`);
+                return { ...employee.toObject(), department };
+            })
+        );
+        res.status(200).json(employeesWithDepartments);
+    } catch (error) {
+        res.status(500).json({ error: `${error}` });
+    }
+});
+
+
+app.get("/employees/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+        const employee = await Employee.findOne({ employee_id: id });
+        if (!employee) return res.status(404).json({ message: "Employee not found" });
+        const department = await Department.findOne({department_id: employee.department_id});
+        const employeeWithDepartment = { ...employee.toObject(), department };
+        res.status(200).json(employeeWithDepartment);
+    } catch (error) {
+        res.status(500).json({ error: `${error}` });
+    }
+});
+
+app.post("/employees", async (req, res) => {
+    try {
+        const { name, employee_id, department_id, position, salary } = req.body;
+        const existingDepartment = await Department.findOne({ department_id });
+        if (!existingDepartment)
+            return res.status(404).json({ message: `Department not found for ID: ${department_id}` });
+        const newEmployee = new Employee({name,employee_id,department_id,position,salary});
+        const createdEmployee = await newEmployee.save();
+        res.status(201).json(createdEmployee);
+    } catch (error) {
+        res.status(500).json({ error: `${error}` });
+    }
+});
+
+app.put("/employees/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, position, salary } = req.body;
+        const updatedEmployee = await Employee.findOneAndUpdate({employee_id: id},{$set: { name, position, salary }},{ new: true });
+        if (!updatedEmployee)   return res.status(404).json({ message: "Employee not found" });
+        res.status(200).json(updatedEmployee);
+    } catch (error) {
+        res.status(500).json({ error: `${error}` });
+    }
+});
+
+app.delete("/employees/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+        const deletedEmployee = await Employee.findOneAndDelete({employee_id: id});
+        if (!deletedEmployee)   return res.status(404).json({ message: "Employee not found" });
+        res.status(200).json({ message: "Employee deleted" });
+    } catch (error) {
+        res.status(500).json({ error: `${error}` });
+    }
+});
+
+app.listen(port, () => {
+    console.log("Server started!!!");
+});
+
+```
+*Employees Collection
+![image](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/bc349439-5158-4599-b7f2-7c2cd4b2359d)
+
+*Department Collection
+![image](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/afa35e96-5f4a-479d-9280-cce5d7cd56dc)
+
+* Create Employee
+![Screenshot (20)](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/5d6a677f-e904-4e8a-a029-72c49f3ba387)
+
+* Update Employee
+![Screenshot (21)](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/bf35882b-40eb-4312-94cb-4ddaf4c2d29a)
+
+*Delete Employee
+![Screenshot (22)](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/b4554696-69fb-4d9b-bf4f-392f2ead6778)
+
+* Display All Empployee Data
+![Screenshot (23)](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/2007231a-97a9-405e-9180-2bb932d8971a)
+
+* Display A Single Employee Data
+![Screenshot (24)](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/342ea554-c5f6-4221-8ea1-38326e4b3062)
+
