@@ -228,7 +228,9 @@ export default TodoItem;
 ## CRUD Operation
 # React Components
 
+
 * Create.js
+
 
 ```
 import React, { useState } from 'react';
@@ -300,7 +302,9 @@ export const Create=()=>{
 };
 ```
 
+
 * Update.js
+
 
 ```
 import React, { useState, useEffect } from "react";
@@ -379,7 +383,9 @@ export const Update = () => {
 
 ```
 
+
 * Delete.js
+
 
 ```
 import React, { useState } from "react";
@@ -422,7 +428,9 @@ export const Delete=()=>{
 
 ```
 
+
 * GetAllEmployeeDetails.js
+
 
 ```
 import React, { useEffect, useState } from "react";
@@ -511,7 +519,9 @@ export const AllData=()=>{
 };
 ```
 
+
 * GetAEmployeeDetails.js
+
 
 ```
 import React, { useEffect, useState } from "react";
@@ -569,9 +579,12 @@ export const SingleUser = ()=>{
 };
 ```
 
+
 # Backend
 
 * index.js
+
+  
 ```
 const express = require("express");
 const app = express();
@@ -683,24 +696,33 @@ app.listen(port, () => {
 });
 
 ```
-*Employees Collection
+
+
+* Department Collection
+
 ![image](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/bc349439-5158-4599-b7f2-7c2cd4b2359d)
 
-*Department Collection
+* Employee Collection
+
 ![image](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/afa35e96-5f4a-479d-9280-cce5d7cd56dc)
 
 * Create Employee
+
 ![Screenshot (20)](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/5d6a677f-e904-4e8a-a029-72c49f3ba387)
 
 * Update Employee
+
 ![Screenshot (21)](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/bf35882b-40eb-4312-94cb-4ddaf4c2d29a)
 
-*Delete Employee
+* Delete Employee
+
 ![Screenshot (22)](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/b4554696-69fb-4d9b-bf4f-392f2ead6778)
 
 * Display All Empployee Data
+
 ![Screenshot (23)](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/2007231a-97a9-405e-9180-2bb932d8971a)
 
 * Display A Single Employee Data
+
 ![Screenshot (24)](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/342ea554-c5f6-4221-8ea1-38326e4b3062)
 
