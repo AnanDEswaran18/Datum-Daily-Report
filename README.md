@@ -726,3 +726,257 @@ app.listen(port, () => {
 
 ![Screenshot (24)](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/342ea554-c5f6-4221-8ea1-38326e4b3062)
 
+
+
+
+## Email sending using nodemailer
+
+# Backend
+
+* Server.js
+
+```
+
+const express = require("express")
+const mongoose = require("mongoose")
+const cors = require("cors")
+const nodemailer = require("nodemailer")
+const app = express()
+
+
+require("dotenv").config()
+app.use(express.json())
+app.use(cors())
+
+
+mongoose
+    .connect(process.env.CONNECTION_STRING)
+    .then(() => console.log("Database Connected"))
+    .catch((error) => console.log(error))
+
+const Events = require("./models/Events")
+const Customer = require("./models/Customer")
+
+// creating event
+app.post("/events", async(req,res)=>{
+    try{
+        const eventData =req.body
+        const event = new Events(eventData)
+        await event.save()
+        res.status(201).json(event)
+    }catch(error){
+        console.error(error)
+        res.status(500).json({ error: "Server error" })
+    }
+})
+
+// fetch event
+app.get("/events", async(req,res)=>{
+    try{
+        const Event=await Events.find()
+        res.json(Event)
+    }catch(error){
+        console.error(error)
+        res.status(500).json({error:"Server error"})
+    }
+})
+
+// sending 
+app.post("/events/:eventId/sendmail", async(req, res)=>{
+    try{
+        const eventId = req.params.eventId
+        const event=await Events.findOne({eventId:eventId}) 
+        if(!event){
+            return res.status(404).json({message:"Event not found"})
+        }
+        const customers = await Customer.find()
+        let current = 0
+        for (const customer of customers){
+            try{
+                await transporter.sendMail({
+                    to: customer.customer_mail,
+                    subject: `Happy ${event.name}! Mr/Ms.${customer.customer_name}!`,
+                    text: event.message,
+                })
+                console.log(`Mail sent to ${customer.customer_name}, Total mails sent ${++current}`);
+
+            }catch(error){
+                console.error(error)
+            }
+        }
+        console.log({ message: "Emails sent successfully" })
+    }catch(error){
+        console.error(error) 
+    }
+})
+
+
+app.get("/customers", async(req,res)=>{
+    try{
+        const customers= await customer.find()
+        res.json(customers)
+    }catch (error){
+        console.error(error)
+    }
+})
+
+const transporter =nodemailer.createTransport({
+    host:"smtp.gmail.com",
+    port:587,
+    auth:{
+        user: process.env.EMAIL,
+        pass: process.env.EMAIL_PASS,
+    }
+})
+
+
+app.listen(5000,()=>console.log("Server running on port 5000"))
+
+
+```
+
+# Frontend
+
+* CreateEvent.js
+
+```
+
+import React, { useState } from "react"
+import axios from "axios"
+
+const CreateForm=({onAddEvent})=>{
+    const [eventData, setEventData] = useState({name: "",date: "",message: "",eventId: ""})
+    
+    const handleInputChange =(e)=>{
+        setEventData({ ...eventData, [e.target.name]: e.target.value })
+    }
+
+    const handleSubmit=async(e)=>{
+        e.preventDefault()
+        try{
+            await axios.post("http://localhost:5000/events", eventData)
+            onAddEvent()
+            setEventData({name:"",date:"",message:"",eventId:""})
+        }catch(error){
+            console.error("Error creating event:", error)
+        }
+    }
+
+    return (
+        <form onSubmit={handleSubmit}>
+        <input type="text" name="name" value={eventData.name} onChange={handleInputChange} placeholder="Event Name" required/>
+        <br />
+        <input type="date" name="date" value={eventData.date} onChange={handleInputChange} required/>
+        <br />
+        <br />
+        <input type="text" name="eventId" value={eventData.eventId} onChange={handleInputChange} placeholder="Event ID" required/>
+        <br />
+        <textarea name="message" value={eventData.message} onChange={handleInputChange} placeholder="Message" required/>
+        <br />
+        <button type="submit">Create Event</button>
+        </form>
+    )
+}
+
+export default CreateForm
+
+
+```
+
+
+* EventsCard.js
+
+```
+
+import React from "react"
+import axios from "axios"
+
+const EventsCard=({event,onSendMail})=>{
+    const handleSendMail = async()=>{
+        try{
+            await axios.post(`http://localhost:5000/events/${event.eventId}/sendmail`)
+            onSendMail()
+        }catch(error){
+            console.error("Error sending event emails:", error)
+        }
+    }
+
+    return (
+        <div style={{border:"5px solid", padding:"0px 20px"}}>
+            <h4>{event.name}</h4>
+            <p>Date: {new Date(event.date).toLocaleDateString()}</p>
+            <p>Message: {event.message}</p>
+            <button style={{border:"5px solid green", background:"green" }}onClick={handleSendMail}>Send Mail</button>
+        </div>
+    )
+}
+
+export default EventsCard
+
+
+```
+
+
+* EventsList.js
+
+```
+
+import React, { useEffect, useState } from "react"
+import axios from "axios"
+import EventsCard from "./EventsCard"
+
+const EventsList=()=>{
+    const [events,setEvents] =useState([])
+
+    useEffect(()=>{
+        const fetchEvents=async()=>{
+            try{
+                const response =await axios.get("http://localhost:5000/events")
+                setEvents(response.data)
+                console.log(response.data)
+            }catch(error){
+                console.error("Error fetching events:", error)
+            }
+        }
+        fetchEvents()
+    },[])
+
+    const handleSendMail =async()=>{
+        try{
+            const response = await axios.get("http://localhost:5000/events")
+            setEvents(response.data)
+        }catch (error) {
+            console.error("Error fetching events:",error)
+        }
+    }
+    return (
+        <div>
+        <h3>Events List</h3>
+            {events.map((event)=>(
+                <EventsCard event={event} onSendMail={handleSendMail}/>
+            ))}
+        </div>
+    )
+}
+
+export default EventsList
+
+
+```
+
+- Creating Event
+
+![Screenshot (30)](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/82aec57c-cccb-4219-995c-92263d910409)
+
+- Displaying the Events
+
+![Screenshot (31)](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/552e5dca-0141-4fba-ad14-e1b0ea99a98c)
+
+- Sending mail using "Send mail" button on EventCard
+
+![Screenshot (32)](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/de4e72aa-26ec-429d-9824-1375d5aed2fb)
+
+- Mail received by the recipients
+
+![Screenshot (33)](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/16a1bf22-d1d5-4243-bac9-990dd0201795)
+
