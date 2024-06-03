@@ -745,7 +745,7 @@ const app = express()
 
 
 require("dotenv").config()
-app.use(express.json())
+app.use(express.json({ limit: "10mb" }));
 app.use(cors())
 
 
@@ -757,11 +757,34 @@ mongoose
 const Events = require("./models/Events")
 const Customer = require("./models/Customer")
 
+const transporter = nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 587,
+    auth: {
+        user: process.env.EMAIL,
+        pass: process.env.EMAIL_PASS,
+    },
+});
+
+
 // creating event
 app.post("/events", async(req,res)=>{
     try{
         const eventData =req.body
-        const event = new Events(eventData)
+        const image = eventData.eventImg;
+
+        if(image &&image.length>10*1024*1024){
+            return res.status(400).json({message:"Image size exceeds the limit of 10MB"})
+        }
+        const baseData = image.replace(/^data:image\/\w+;base64,/,"");
+        const imgBuffer = Buffer.from(baseData,"base64")
+        const event = new Events({
+            ...eventData,
+            eventImg : {
+                data: imgBuffer,
+                contentType: "image/jpeg"
+            }
+        })
         await event.save()
         res.status(201).json(event)
     }catch(error){
@@ -781,7 +804,7 @@ app.get("/events", async(req,res)=>{
     }
 })
 
-// sending 
+// sending mail
 app.post("/events/:eventId/sendmail", async(req, res)=>{
     try{
         const eventId = req.params.eventId
@@ -789,14 +812,26 @@ app.post("/events/:eventId/sendmail", async(req, res)=>{
         if(!event){
             return res.status(404).json({message:"Event not found"})
         }
+        const imageBuffer = event.eventImg.data
         const customers = await Customer.find()
         let current = 0
         for (const customer of customers){
             try{
+                await new Promise((resolve) => setTimeout(resolve, 6000));
                 await transporter.sendMail({
                     to: customer.customer_mail,
                     subject: `Happy ${event.name}! Mr/Ms.${customer.customer_name}!`,
-                    text: event.message,
+                    html : `
+                        <p> ${event.message}</p>
+                        <img src="cid:eventImage" alt=${event.name}>
+                    `,
+                    attachments:[
+                        {
+                            filename:`${event.name}.jpg`,
+                            content:imageBuffer,
+                            cid:"eventImage"
+                        }
+                    ]
                 })
                 console.log(`Mail sent to ${customer.customer_name}, Total mails sent ${++current}`);
 
@@ -817,15 +852,6 @@ app.get("/customers", async(req,res)=>{
         res.json(customers)
     }catch (error){
         console.error(error)
-    }
-})
-
-const transporter =nodemailer.createTransport({
-    host:"smtp.gmail.com",
-    port:587,
-    auth:{
-        user: process.env.EMAIL,
-        pass: process.env.EMAIL_PASS,
     }
 })
 
@@ -980,3 +1006,6 @@ export default EventsList
 
 ![Screenshot (33)](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/16a1bf22-d1d5-4243-bac9-990dd0201795)
 
+- Mail received by the receipient with an image
+
+![image](https://github.com/AnanDEswaran18/Datum-Daily-Report/assets/100366969/72da4d3d-67df-440e-9d8a-bfef526cf28c)
